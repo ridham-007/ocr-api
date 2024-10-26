@@ -1,0 +1,12 @@
+Flask==2.1.2
+pdfplumber==0.7.5
+pytesseract==0.3.10
+Pillow==9.5.0
+python-docx==0.8.11
+openai==0.27.6
+xlrd==2.0.1
+openpyxl==3.1.2
+python-pptx==0.6.21
+ebooklib==0.18
+beautifulsoup4==4.12.2
+werkzeug==2.0.3
