@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.responses import JSONResponse
 import pdfplumber
 import pytesseract
 from PIL import Image
@@ -17,9 +18,9 @@ import os
 load_dotenv()
 
 # Set up OpenAI API key
-openai.api_key = os.getenv("OPENAI_API_KEY");
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-app = Flask(__name__)
+app = FastAPI()
 
 # Extract text from PDF
 def extract_text_from_pdf(file):
@@ -45,6 +46,7 @@ def extract_text_from_excel(file):
         sheets = workbook.sheets()
     except:
         # Try to open as XLSX
+        file.seek(0)
         workbook = openpyxl.load_workbook(file)
         sheets = workbook.worksheets
 
@@ -96,39 +98,32 @@ def summarize_text(text):
     except Exception as e:
         return str(e)
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file provided'}), 400
-
-    file = request.files['file']
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
     file_type = file.content_type
     text = ""
 
     try:
         if file_type == 'application/pdf':
-            text = extract_text_from_pdf(file)
+            text = extract_text_from_pdf(file.file)
         elif file_type in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword']:
-            text = extract_text_from_docx(file)
+            text = extract_text_from_docx(file.file)
         elif file_type.startswith('image/'):
-            text = extract_text_from_image(file)
+            text = extract_text_from_image(file.file)
         elif file_type in ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']:
-            text = extract_text_from_excel(file)
+            text = extract_text_from_excel(file.file)
         elif file_type == 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
-            text = extract_text_from_pptx(file)
+            text = extract_text_from_pptx(file.file)
         elif file_type == 'application/epub+zip':
-            text = extract_text_from_epub(file)
+            text = extract_text_from_epub(file.file)
         elif file_type == 'text/plain':
-            text = extract_text_from_txt(file)
+            text = extract_text_from_txt(file.file)
         else:
-            return jsonify({'error': 'Unsupported file type'}), 400
+            raise HTTPException(status_code=400, detail="Unsupported file type")
 
         # Summarize the extracted text
         summary = summarize_text(text)
 
-        return jsonify({'summary': summary, 'full_text': text})
+        return JSONResponse(content={'summary': summary, 'full_text': text})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-if __name__ == "__main__":
-    app.run(debug=True)
+        raise HTTPException(status_code=500, detail=str(e))
