@@ -10,9 +10,14 @@ import openpyxl
 from pptx import Presentation
 from ebooklib import epub
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Set up OpenAI API key
-openai.api_key = ""
+openai.api_key = os.getenv("OPENAI_API_KEY");
 
 app = Flask(__name__)
 
