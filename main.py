@@ -22,6 +22,12 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
 
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    return JSONResponse(content={"status": "Healthy", "message": "The server is running correctly."})
+
+
 # Extract text from PDF
 def extract_text_from_pdf(file):
     with pdfplumber.open(file) as pdf:
