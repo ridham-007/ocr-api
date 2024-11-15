@@ -22,6 +22,17 @@ echo "Installing python3 and pip"
 sudo apt-get update
 sudo apt-get install -y python3 python3-pip python3-venv python3-virtualenv pipx
 
+# Install Tesseract OCR
+echo "Installing Tesseract OCR"
+sudo apt-get install -y tesseract-ocr
+
+# Verify Tesseract installation
+if ! command -v tesseract > /dev/null; then
+    echo "Tesseract installation failed. Please check your system setup."
+    exit 1
+fi
+echo "Tesseract installed successfully"
+
 # Create virtual environment in the user's home directory to avoid permission issues
 echo "Creating virtual environment"
 python3 -m venv ~/langchain-app-venv
