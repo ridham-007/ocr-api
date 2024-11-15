@@ -70,7 +70,12 @@ fi
 sudo pkill uvicorn
 sudo rm -rf myapp.sock
 
-# Start uvicorn with the Flask application using the virtual environment
-echo "Starting uvicorn"
-sudo ~/langchain-app-venv/bin/uvicorn --workers 3 --bind unix:myapp.sock main:app --user www-data --group www-data --daemon
-echo "Uvicorn started 🚀"
+echo "Starting Daphne with Flask app"
+
+# Activate the virtual environment
+source ~/langchain-app-venv/bin/activate
+
+# Start Daphne with a Unix socket for communication
+sudo ~/langchain-app-venv/bin/daphne -u unix:myapp.sock main:app --user www-data --group www-data --daemon
+
+echo "Daphne started 🚀"
