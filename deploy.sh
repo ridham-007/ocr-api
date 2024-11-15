@@ -1,27 +1,40 @@
 #!/bin/bash
 
-echo "deleting old app"
+echo "Deleting old app"
 sudo rm -rf /var/www/
 
-echo "creating app folder"
-sudo mkdir -p /var/www/langchain-app 
+echo "Creating app folder"
+sudo mkdir -p /var/www/langchain-app
 
-echo "moving files to app folder"
-sudo mv  * /var/www/langchain-app
+echo "Moving files to app folder"
+sudo mv * /var/www/langchain-app
 
 # Navigate to the app directory
 cd /var/www/langchain-app/
 sudo mv env .env
 
+# Install python3 and python3-pip if not already installed
+echo "Installing python3 and pip"
 sudo apt-get update
-echo "installing python and pip"
 sudo apt-get install -y python3 python3-pip
 
-# Install application dependencies from requirements.txt
-echo "Install application dependencies from requirements.txt"
-sudo pip install -r requirements.txt
+# Install virtualenv if not already installed
+echo "Installing virtualenv"
+sudo pip3 install virtualenv
 
-# Update and install Nginx if not already installed
+# Create a virtual environment
+echo "Creating virtual environment"
+python3 -m venv /var/www/langchain-app/venv
+
+# Activate the virtual environment
+echo "Activating virtual environment"
+source /var/www/langchain-app/venv/bin/activate
+
+# Install application dependencies from requirements.txt inside the virtual environment
+echo "Installing application dependencies from requirements.txt"
+pip install -r requirements.txt
+
+# Install Nginx if not already installed
 if ! command -v nginx > /dev/null; then
     echo "Installing Nginx"
     sudo apt-get update
@@ -53,9 +66,7 @@ fi
 sudo pkill uvicorn
 sudo rm -rf myapp.sock
 
-# # Start uvicorn with the Flask application
-# # Replace 'server:app' with 'yourfile:app' if your Flask instance is named differently.
-# # uvicorn --workers 3 --bind 0.0.0.0:8000 main:app &
-echo "starting uvicorn"
-sudo uvicorn --workers 3 --bind unix:myapp.sock  main:app --user www-data --group www-data --daemon
-echo "started uvicorn 🚀"
+# Start uvicorn with the Flask application using the virtual environment
+echo "Starting uvicorn"
+sudo /var/www/langchain-app/venv/bin/uvicorn --workers 3 --bind unix:myapp.sock main:app --user www-data --group www-data --daemon
+echo "Uvicorn started 🚀"
