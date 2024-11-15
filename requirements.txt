@@ -14,3 +14,4 @@ beautifulsoup4
 aiofiles
 uvicorn
 daphne
+python-multipart
