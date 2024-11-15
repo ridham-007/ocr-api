@@ -72,5 +72,5 @@ sudo rm -rf myapp.sock
 
 # Start uvicorn with the Flask application using the virtual environment
 echo "Starting uvicorn"
-sudo ~/langchain-app-venv/bin/uvicorn --workers 3 --bind unix:myapp.sock main:app --user www-data --group www-data --daemon
+sudo ~/langchain-app-venv/bin/uvicorn --workers 3 --uds myapp.sock main:app --daemon
 echo "Uvicorn started 🚀"
