@@ -16,11 +16,11 @@ sudo mv env .env
 # Install python3 and python3-pip if not already installed
 echo "Installing python3 and pip"
 sudo apt-get update
-sudo apt-get install -y python3 python3-pip
+sudo apt-get install -y python3 python3-pip python3-venv
 
 # Install virtualenv if not already installed
 echo "Installing virtualenv"
-sudo pip3 install virtualenv
+sudo apt-get install -y python3-virtualenv
 
 # Create a virtual environment
 echo "Creating virtual environment"
@@ -29,6 +29,10 @@ python3 -m venv /var/www/langchain-app/venv
 # Activate the virtual environment
 echo "Activating virtual environment"
 source /var/www/langchain-app/venv/bin/activate
+
+# Ensure pip is up to date inside the virtual environment
+echo "Upgrading pip"
+pip install --upgrade pip
 
 # Install application dependencies from requirements.txt inside the virtual environment
 echo "Installing application dependencies from requirements.txt"
