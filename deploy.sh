@@ -56,26 +56,48 @@ if ! command -v nginx > /dev/null; then
     sudo apt-get install -y nginx
 fi
 
-# Configure Nginx to act as a reverse proxy if not already configured
+# Install Certbot and Nginx plugin for SSL
+echo "Installing Certbot and Nginx plugin"
+sudo apt-get install -y certbot python3-certbot-nginx
+
+# Configure Nginx to act as a reverse proxy for api.smartdocsai.com
 if [ ! -f /etc/nginx/sites-available/myapp ]; then
     sudo rm -f /etc/nginx/sites-enabled/default
     sudo bash -c 'cat > /etc/nginx/sites-available/myapp <<EOF
-server {
-    listen 80;
-    server_name _;
-
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/var/www/langchain-app/myapp.sock;
+    server {
+        listen 80;
+        server_name api.smartdocsai.com;
+        
+        # Redirect HTTP to HTTPS
+        return 301 https://\$host\$request_uri;
     }
-}
-EOF'
+
+    server {
+        listen 443 ssl;
+        server_name api.smartdocsai.com;
+
+        ssl_certificate /etc/letsencrypt/live/api.smartdocsai.com/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/api.smartdocsai.com/privkey.pem;
+
+        location / {
+            include proxy_params;
+            proxy_pass http://unix:/var/www/langchain-app/myapp.sock;
+        }
+    }
+    EOF'
 
     sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled
     sudo systemctl restart nginx
 else
     echo "Nginx reverse proxy configuration already exists."
 fi
+
+# Obtain and install SSL certificate with Certbot
+echo "Obtaining SSL certificate"
+sudo certbot --nginx -d api.smartdocsai.com
+
+echo "SSL setup complete 🎉"
+
 
 # Stop any existing uvicorn process
 sudo pkill uvicorn
