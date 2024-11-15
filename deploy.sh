@@ -13,24 +13,24 @@ sudo mv * /var/www/langchain-app
 cd /var/www/langchain-app/
 sudo mv env .env
 
+# Ensure the user has write permissions to /var/www/langchain-app
+echo "Fixing directory permissions"
+sudo chown -R $USER:$USER /var/www/langchain-app
+
 # Install python3 and python3-pip if not already installed
 echo "Installing python3 and pip"
 sudo apt-get update
-sudo apt-get install -y python3 python3-pip python3-venv
+sudo apt-get install -y python3 python3-pip python3-venv python3-virtualenv pipx
 
-# Install virtualenv if not already installed
-echo "Installing virtualenv"
-sudo apt-get install -y python3-virtualenv
-
-# Create a virtual environment
+# Create virtual environment in the user's home directory to avoid permission issues
 echo "Creating virtual environment"
-python3 -m venv /var/www/langchain-app/venv
+python3 -m venv ~/langchain-app-venv
 
 # Activate the virtual environment
 echo "Activating virtual environment"
-source /var/www/langchain-app/venv/bin/activate
+source ~/langchain-app-venv/bin/activate
 
-# Ensure pip is up to date inside the virtual environment
+# Upgrade pip inside the virtual environment
 echo "Upgrading pip"
 pip install --upgrade pip
 
@@ -72,5 +72,5 @@ sudo rm -rf myapp.sock
 
 # Start uvicorn with the Flask application using the virtual environment
 echo "Starting uvicorn"
-sudo /var/www/langchain-app/venv/bin/uvicorn --workers 3 --bind unix:myapp.sock main:app --user www-data --group www-data --daemon
+sudo ~/langchain-app-venv/bin/uvicorn --workers 3 --bind unix:myapp.sock main:app --user www-data --group www-data --daemon
 echo "Uvicorn started 🚀"
