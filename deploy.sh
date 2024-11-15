@@ -94,7 +94,7 @@ fi
 
 # Obtain and install SSL certificate with Certbot
 echo "Obtaining SSL certificate"
-sudo certbot --nginx -d api.smartdocsai.com
+sudo certbot -d api.smartdocsai.com --manual --preferred-challenges dns certonly
 
 echo "SSL setup complete 🎉"
 
