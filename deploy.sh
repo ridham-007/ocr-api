@@ -76,6 +76,8 @@ echo "Starting Daphne with Flask app"
 source ~/langchain-app-venv/bin/activate
 
 # Start Daphne with a Unix socket for communication
-sudo ~/langchain-app-venv/bin/daphne -u unix:myapp.sock main:app --user www-data --group www-data --daemon
+# Run daphne as www-data user and group, and in the background
+sudo -u www-data -g www-data nohup ~/langchain-app-venv/bin/daphne -u unix:myapp.sock main:app &
 
 echo "Daphne started 🚀"
+
