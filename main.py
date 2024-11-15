@@ -27,6 +27,10 @@ app = FastAPI()
 async def health_check():
     return JSONResponse(content={"status": "Healthy", "message": "The server is running correctly."})
 
+@app.get("/keseho")
+async def health_check():
+    return JSONResponse(content={"status": "Majama", "message": "I am boss."})
+
 
 # Extract text from PDF
 def extract_text_from_pdf(file):
