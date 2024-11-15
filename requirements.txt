@@ -13,3 +13,4 @@ ebooklib
 beautifulsoup4
 aiofiles
 uvicorn
+daphne
