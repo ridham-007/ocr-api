@@ -137,13 +137,13 @@ echo "Removing already started uvicorn"
 if pgrep -x "uvicorn" > /dev/null; then
     # Stop any existing uvicorn process
     sudo pkill uvicorn || true  # Ignore errors if no process is found
-    sudo rm -rf myapp.sock
+    # sudo rm -rf myapp.sock
     echo "Existing uvicorn process removed."
 else
     echo "No running uvicorn process found."
 fi
 
-# Start uvicorn with the Flask application using the virtual environment
+# Start uvicorn with the Flask using the virtual environment
 echo "Starting uvicorn"
 sudo nohup ~/langchain-app-venv/bin/uvicorn main:app --workers 3 --uds /var/www/langchain-app/myapp.sock &
 
