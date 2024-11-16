@@ -130,6 +130,7 @@ fi
 
 echo "SSL setup complete 🎉"
 
+echo "Removing already uvicorn"
 # Stop any existing uvicorn process
 sudo pkill uvicorn
 sudo rm -rf myapp.sock
