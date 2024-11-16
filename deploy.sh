@@ -130,14 +130,21 @@ fi
 
 echo "SSL setup complete 🎉"
 
+# Check if `uvicorn` is running and stop it if necessary
 echo "Removing already uvicorn"
-# Stop any existing uvicorn process
-sudo pkill uvicorn
-sudo rm -rf myapp.sock
+
+# Check if the uvicorn process is running before trying to kill it
+if pgrep -x "uvicorn" > /dev/null; then
+    # Stop any existing uvicorn process
+    sudo pkill uvicorn || true  # Ignore errors if no process is found
+    sudo rm -rf myapp.sock
+    echo "Existing uvicorn process removed."
+else
+    echo "No running uvicorn process found."
+fi
 
 # Start uvicorn with the Flask application using the virtual environment
 echo "Starting uvicorn"
-# sudo nohup ~/langchain-app-venv/bin/uvicorn --workers 3 --uds myapp.sock main:app &
 sudo nohup ~/langchain-app-venv/bin/uvicorn main:app --workers 3 --uds /var/www/langchain-app/myapp.sock &
 
 echo "Uvicorn started 🚀"
