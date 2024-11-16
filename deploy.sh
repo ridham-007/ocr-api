@@ -80,7 +80,7 @@ if [ -f "$CONFIG_FILE" ]; then
     echo "Backup of the old configuration saved as $CONFIG_FILE.bak"
 
     # Update the file with the new configuration
-    sudo bash -c 'cat > "$CONFIG_FILE" <<EOF
+    sudo bash -c "cat > $CONFIG_FILE <<EOF
     server {
         listen 80;
         server_name api.smartdocsai.com;
@@ -101,7 +101,7 @@ if [ -f "$CONFIG_FILE" ]; then
             proxy_pass http://unix:/var/www/langchain-app/myapp.sock;
         }
     }
-    EOF'
+    EOF"
 
     # Reload Nginx to apply changes
     sudo systemctl reload nginx
@@ -111,7 +111,7 @@ else
     echo "Creating new Nginx reverse proxy configuration..."
 
     sudo rm -f /etc/nginx/sites-enabled/default
-    sudo bash -c 'cat > /etc/nginx/sites-available/myapp <<EOF
+    sudo bash -c "cat > /etc/nginx/sites-available/myapp <<EOF
     server {
         listen 80;
         server_name api.smartdocsai.com;
@@ -132,12 +132,13 @@ else
             proxy_pass http://unix:/var/www/langchain-app/myapp.sock;
         }
     }
-    EOF'
+    EOF"
 
     sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled
     sudo systemctl restart nginx
     echo "New Nginx reverse proxy configuration created and Nginx restarted."
 fi
+
 
 # Check if a valid certificate already exists
 CERT_DIR="/etc/letsencrypt/live/api.smartdocsai.com"
