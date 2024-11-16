@@ -68,77 +68,48 @@ fi
 echo "Installing Certbot and Nginx plugin"
 sudo apt-get install -y certbot python3-certbot-nginx
 
-# Configure Nginx to act as a reverse proxy for api.smartdocsai.com
+# Define the config file path
 CONFIG_FILE="/etc/nginx/sites-available/myapp"
 
-# Check if the file exists, and update it
+# Check if the configuration file exists
 if [ -f "$CONFIG_FILE" ]; then
-    echo "Updating Nginx reverse proxy configuration..."
-
-    # Backup the existing configuration file
-    sudo cp "$CONFIG_FILE" "$CONFIG_FILE.bak"
-    echo "Backup of the old configuration saved as $CONFIG_FILE.bak"
-
-    # Update the file with the new configuration
-    sudo bash -c "cat > $CONFIG_FILE <<EOF
-    server {
-        listen 80;
-        server_name api.smartdocsai.com;
-        
-        # Redirect HTTP to HTTPS
-        return 301 https://\$host\$request_uri;
-    }
-
-    server {
-        listen 443 ssl;
-        server_name api.smartdocsai.com;
-
-        ssl_certificate /etc/letsencrypt/live/api.smartdocsai.com/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/api.smartdocsai.com/privkey.pem;
-
-        location / {
-            include proxy_params;
-            proxy_pass http://unix:/var/www/langchain-app/myapp.sock;
-        }
-    }
-    EOF"
-
-    # Reload Nginx to apply changes
-    sudo systemctl reload nginx
-    echo "Nginx configuration updated and reloaded."
-else
-    # If the file doesn't exist, create a new one
-    echo "Creating new Nginx reverse proxy configuration..."
-
-    sudo rm -f /etc/nginx/sites-enabled/default
-    sudo bash -c "cat > /etc/nginx/sites-available/myapp <<EOF
-    server {
-        listen 80;
-        server_name api.smartdocsai.com;
-        
-        # Redirect HTTP to HTTPS
-        return 301 https://\$host\$request_uri;
-    }
-
-    server {
-        listen 443 ssl;
-        server_name api.smartdocsai.com;
-
-        ssl_certificate /etc/letsencrypt/live/api.smartdocsai.com/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/api.smartdocsai.com/privkey.pem;
-
-        location / {
-            include proxy_params;
-            proxy_pass http://unix:/var/www/langchain-app/myapp.sock;
-        }
-    }
-    EOF"
-
-    sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled
-    sudo systemctl restart nginx
-    echo "New Nginx reverse proxy configuration created and Nginx restarted."
+    # If the file exists, remove the existing file and the symlink
+    sudo rm -f "$CONFIG_FILE"
+    sudo rm -f /etc/nginx/sites-enabled/myapp
+    echo "Existing Nginx reverse proxy configuration deleted."
 fi
 
+# Create a new Nginx reverse proxy configuration
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo bash -c "cat > $CONFIG_FILE <<EOF
+server {
+    listen 80;
+    server_name api.smartdocsai.com;
+    
+    # Redirect HTTP to HTTPS
+    return 301 https://\$host\$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name api.smartdocsai.com;
+
+    ssl_certificate /etc/letsencrypt/live/api.smartdocsai.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.smartdocsai.com/privkey.pem;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/var/www/langchain-app/myapp.sock;
+    }
+}
+EOF"
+
+# Create the symlink in sites-enabled
+sudo ln -s "$CONFIG_FILE" /etc/nginx/sites-enabled
+echo "New Nginx reverse proxy configuration created."
+
+# Restart Nginx to apply changes
+sudo systemctl restart nginx
 
 # Check if a valid certificate already exists
 CERT_DIR="/etc/letsencrypt/live/api.smartdocsai.com"
