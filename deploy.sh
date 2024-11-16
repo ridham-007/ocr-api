@@ -69,7 +69,47 @@ echo "Installing Certbot and Nginx plugin"
 sudo apt-get install -y certbot python3-certbot-nginx
 
 # Configure Nginx to act as a reverse proxy for api.smartdocsai.com
-if [ ! -f /etc/nginx/sites-available/myapp ]; then
+CONFIG_FILE="/etc/nginx/sites-available/myapp"
+
+# Check if the file exists, and update it
+if [ -f "$CONFIG_FILE" ]; then
+    echo "Updating Nginx reverse proxy configuration..."
+
+    # Backup the existing configuration file
+    sudo cp "$CONFIG_FILE" "$CONFIG_FILE.bak"
+    echo "Backup of the old configuration saved as $CONFIG_FILE.bak"
+
+    # Update the file with the new configuration
+    sudo bash -c 'cat > "$CONFIG_FILE" <<EOF
+    server {
+        listen 80;
+        server_name api.smartdocsai.com;
+        
+        # Redirect HTTP to HTTPS
+        return 301 https://\$host\$request_uri;
+    }
+
+    server {
+        listen 443 ssl;
+        server_name api.smartdocsai.com;
+
+        ssl_certificate /etc/letsencrypt/live/api.smartdocsai.com/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/api.smartdocsai.com/privkey.pem;
+
+        location / {
+            include proxy_params;
+            proxy_pass http://unix:/var/www/langchain-app/myapp.sock;
+        }
+    }
+    EOF'
+
+    # Reload Nginx to apply changes
+    sudo systemctl reload nginx
+    echo "Nginx configuration updated and reloaded."
+else
+    # If the file doesn't exist, create a new one
+    echo "Creating new Nginx reverse proxy configuration..."
+
     sudo rm -f /etc/nginx/sites-enabled/default
     sudo bash -c 'cat > /etc/nginx/sites-available/myapp <<EOF
     server {
@@ -96,8 +136,7 @@ if [ ! -f /etc/nginx/sites-available/myapp ]; then
 
     sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled
     sudo systemctl restart nginx
-else
-    echo "Nginx reverse proxy configuration already exists."
+    echo "New Nginx reverse proxy configuration created and Nginx restarted."
 fi
 
 # Check if a valid certificate already exists
