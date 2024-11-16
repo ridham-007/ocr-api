@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 set -e  # Exit on any error
 set -o pipefail  # Catch errors in pipelines
 
@@ -101,12 +100,22 @@ else
     echo "Nginx reverse proxy configuration already exists."
 fi
 
-# Obtain and install SSL certificate with Certbot
-echo "Obtaining SSL certificate"
-sudo certbot -d api.smartdocsai.com --manual --preferred-challenges dns certonly
+# Check if a valid certificate already exists
+CERT_DIR="/etc/letsencrypt/live/api.smartdocsai.com"
+if [ -d "$CERT_DIR" ]; then
+    echo "Checking existing certificate validity..."
+    if sudo openssl x509 -checkend 86400 -noout -in "$CERT_DIR/fullchain.pem"; then
+        echo "Certificate is valid for at least another day. Skipping renewal."
+    else
+        echo "Certificate is close to expiry or invalid. Renewing certificate..."
+        sudo certbot renew
+    fi
+else
+    echo "No existing certificate found. Obtaining a new certificate..."
+    sudo certbot --nginx -d api.smartdocsai.com
+fi
 
 echo "SSL setup complete 🎉"
-
 
 # Stop any existing uvicorn process
 sudo pkill uvicorn
@@ -114,5 +123,5 @@ sudo rm -rf myapp.sock
 
 # Start uvicorn with the Flask application using the virtual environment
 echo "Starting uvicorn"
-sudo nohup ~/langchain-app-venv/bin/uvicorn --workers 3 --uds myapp.sock main:app
+sudo nohup ~/langchain-app-venv/bin/uvicorn --workers 3 --uds myapp.sock main:app &
 echo "Uvicorn started 🚀"
