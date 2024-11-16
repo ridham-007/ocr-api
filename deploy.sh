@@ -92,12 +92,17 @@ else
     echo "Nginx reverse proxy configuration already exists."
 fi
 
-# Obtain and install SSL certificate with Certbot
+# Automatically obtain an SSL certificate using Certbot
 echo "Obtaining SSL certificate"
-sudo certbot -d api.smartdocsai.com --manual --preferred-challenges dns certonly
+sudo certbot --nginx -d api.smartdocsai.com --non-interactive --agree-tos -m ridhamavaiya1999@gmail.com
+
+# Check if the SSL certificate was successfully obtained
+if [ $? -ne 0 ]; then
+    echo "Certbot failed to obtain SSL certificate. Please check your domain setup and try again."
+    exit 1
+fi
 
 echo "SSL setup complete 🎉"
-
 
 # Stop any existing uvicorn process
 sudo pkill uvicorn
@@ -105,5 +110,5 @@ sudo rm -rf myapp.sock
 
 # Start uvicorn with the Flask application using the virtual environment
 echo "Starting uvicorn"
-sudo nohup ~/langchain-app-venv/bin/uvicorn --workers 3 --uds myapp.sock main:app
+sudo nohup ~/langchain-app-venv/bin/uvicorn --workers 3 --uds myapp.sock main:app &
 echo "Uvicorn started 🚀"
