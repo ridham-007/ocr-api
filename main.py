@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import pdfplumber
 import pytesseract
 from PIL import Image
@@ -22,6 +23,15 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
 
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow requests from any origin
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
+
 # Health check endpoint
 @app.get("/health")
 async def health_check():
@@ -30,7 +40,6 @@ async def health_check():
 @app.get("/keseho")
 async def health_check():
     return JSONResponse(content={"status": "Majama", "message": "I am boss."})
-
 
 # Extract text from PDF
 def extract_text_from_pdf(file):
