@@ -102,17 +102,19 @@ fi
 
 # Check if a valid certificate already exists
 CERT_DIR="/etc/letsencrypt/live/api.smartdocsai.com"
+echo "Setting up SSL certificates"
 if [ -d "$CERT_DIR" ]; then
-    echo "Checking existing certificate validity..."
+    echo "Existing certificate found. Checking validity..."
     if sudo openssl x509 -checkend 86400 -noout -in "$CERT_DIR/fullchain.pem"; then
-        echo "Certificate is valid for at least another day. Skipping renewal."
+        echo "Certificate is valid for at least another day. Reinstalling the existing certificate."
+        sudo certbot install --nginx -d api.smartdocsai.com --non-interactive --agree-tos -m ridhamavaiya1999@gmail.com
     else
-        echo "Certificate is close to expiry or invalid. Renewing certificate..."
-        sudo certbot renew
+        echo "Certificate is nearing expiry or invalid. Renewing..."
+        sudo certbot renew --non-interactive --agree-tos
     fi
 else
-    echo "No existing certificate found. Obtaining a new certificate..."
-    sudo certbot --nginx -d api.smartdocsai.com
+    echo "No certificate found. Requesting a new one..."
+    sudo certbot --nginx -d api.smartdocsai.com --non-interactive --agree-tos -m ridhamavaiya1999@gmail.com
 fi
 
 echo "SSL setup complete 🎉"
@@ -123,5 +125,7 @@ sudo rm -rf myapp.sock
 
 # Start uvicorn with the Flask application using the virtual environment
 echo "Starting uvicorn"
-sudo nohup ~/langchain-app-venv/bin/uvicorn --workers 3 --uds myapp.sock main:app &
+# sudo nohup ~/langchain-app-venv/bin/uvicorn --workers 3 --uds myapp.sock main:app &
+sudo nohup ~/langchain-app-venv/bin/uvicorn main:app --workers 3 --uds /var/www/langchain-app/myapp.sock &
+
 echo "Uvicorn started 🚀"
