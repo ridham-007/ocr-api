@@ -114,7 +114,7 @@ EOF"
 sudo ln -s "$CONFIG_FILE" /etc/nginx/sites-enabled
 echo "New Nginx reverse proxy configuration created."
 
-# Restart Nginx to apply changes is 
+# Restart Nginx to apply changes
 sudo systemctl restart nginx
 
 # Check if a valid certificate already exists
