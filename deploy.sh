@@ -1,10 +1,7 @@
 #!/bin/bash
 
-DOMAIN="api.smartdocsai.com"
-EMAIL="ridhamavaiya1999@gmail.com"
-
 echo "Deleting old app"
-sudo rm -rf /var/www/langchain-app
+sudo rm -rf /var/www/
 
 echo "Creating app folder"
 sudo mkdir -p /var/www/langchain-app
@@ -21,7 +18,7 @@ echo "Fixing directory permissions"
 sudo chown -R $USER:$USER /var/www/langchain-app
 
 # Install python3 and python3-pip if not already installed
-echo "Installing Python and pip"
+echo "Installing python3 and pip"
 sudo apt-get update
 sudo apt-get install -y python3 python3-pip python3-venv python3-virtualenv pipx
 
@@ -36,7 +33,7 @@ if ! command -v tesseract > /dev/null; then
 fi
 echo "Tesseract installed successfully"
 
-# Create virtual environment
+# Create virtual environment in the user's home directory to avoid permission issues
 echo "Creating virtual environment"
 python3 -m venv ~/langchain-app-venv
 
@@ -48,8 +45,8 @@ source ~/langchain-app-venv/bin/activate
 echo "Upgrading pip"
 pip install --upgrade pip
 
-# Install application dependencies
-echo "Installing application dependencies"
+# Install application dependencies from requirements.txt inside the virtual environment
+echo "Installing application dependencies from requirements.txt"
 pip install -r requirements.txt
 
 # Install Nginx if not already installed
@@ -59,65 +56,54 @@ if ! command -v nginx > /dev/null; then
     sudo apt-get install -y nginx
 fi
 
-# Install Certbot and Nginx plugin
+# Install Certbot and Nginx plugin for SSL
 echo "Installing Certbot and Nginx plugin"
 sudo apt-get install -y certbot python3-certbot-nginx
 
-# Configure Nginx
+# Configure Nginx to act as a reverse proxy for api.smartdocsai.com
 if [ ! -f /etc/nginx/sites-available/myapp ]; then
-    echo "Creating Nginx configuration for $DOMAIN"
-    sudo bash -c "cat > /etc/nginx/sites-available/myapp <<EOF
-server {
-    listen 80;
-    server_name $DOMAIN;
-
-    # Redirect HTTP to HTTPS
-    return 301 https://\$host\$request_uri;
-}
-
-server {
-    listen 443 ssl;
-    server_name $DOMAIN;
-
-    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
-
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/var/www/langchain-app/myapp.sock;
+    sudo rm -f /etc/nginx/sites-enabled/default
+    sudo bash -c 'cat > /etc/nginx/sites-available/myapp <<EOF
+    server {
+        listen 80;
+        server_name api.smartdocsai.com;
+        
+        # Redirect HTTP to HTTPS
+        return 301 https://\$host\$request_uri;
     }
-}
-EOF"
 
-    # Enable the configuration
+    server {
+        listen 443 ssl;
+        server_name api.smartdocsai.com;
+
+        ssl_certificate /etc/letsencrypt/live/api.smartdocsai.com/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/api.smartdocsai.com/privkey.pem;
+
+        location / {
+            include proxy_params;
+            proxy_pass http://unix:/var/www/langchain-app/myapp.sock;
+        }
+    }
+    EOF'
+
     sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled
-    sudo nginx -t && sudo systemctl reload nginx
+    sudo systemctl restart nginx
 else
-    echo "Nginx configuration for $DOMAIN already exists. Reloading Nginx."
-    sudo nginx -t && sudo systemctl reload nginx
+    echo "Nginx reverse proxy configuration already exists."
 fi
 
-# Obtain SSL certificate
-echo "Obtaining SSL certificate for $DOMAIN"
-sudo certbot --nginx -d $DOMAIN --non-interactive --agree-tos -m $EMAIL
-
-if [ $? -ne 0 ]; then
-    echo "Certbot failed to install SSL certificate automatically. Attempting manual installation."
-    sudo certbot install --cert-name $DOMAIN --nginx
-    if [ $? -ne 0 ]; then
-        echo "Manual installation also failed. Please check Certbot logs for more details."
-        exit 1
-    fi
-fi
+# Obtain and install SSL certificate with Certbot
+echo "Obtaining SSL certificate"
+sudo certbot -d api.smartdocsai.com --manual --preferred-challenges dns certonly
 
 echo "SSL setup complete 🎉"
 
-# Stop any existing Uvicorn process
-echo "Stopping any existing Uvicorn process"
+
+# Stop any existing uvicorn process
 sudo pkill uvicorn
 sudo rm -rf myapp.sock
 
-# Start Uvicorn with the Flask application
-echo "Starting Uvicorn"
-sudo nohup ~/langchain-app-venv/bin/uvicorn --workers 3 --uds myapp.sock main:app &
+# Start uvicorn with the Flask application using the virtual environment
+echo "Starting uvicorn"
+sudo nohup ~/langchain-app-venv/bin/uvicorn --workers 3 --uds myapp.sock main:app
 echo "Uvicorn started 🚀"
