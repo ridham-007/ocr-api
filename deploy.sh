@@ -71,7 +71,7 @@ sudo apt-get install -y certbot python3-certbot-nginx
 # Define the config file path
 CONFIG_FILE="/etc/nginx/sites-available/myapp"
 
-# Check if the configuration file exists
+# Check if the configuration file
 if [ -f "$CONFIG_FILE" ]; then
     # If the file exists, remove the existing file and the symlink
     sudo rm -f "$CONFIG_FILE"
