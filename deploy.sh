@@ -130,7 +130,7 @@ fi
 
 echo "SSL setup complete 🎉"
 
-# Check if `uvicorn` is running and stop it if necessary
+# Check if `uvicorn` is running and stop if necessary
 echo "Removing already started uvicorn"
 
 # Check if the uvicorn process is running before trying to kill it
