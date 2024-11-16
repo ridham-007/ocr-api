@@ -131,7 +131,7 @@ fi
 echo "SSL setup complete 🎉"
 
 # Check if `uvicorn` is running and stop it if necessary
-echo "Removing already uvicorn"
+echo "Removing already started uvicorn"
 
 # Check if the uvicorn process is running before trying to kill it
 if pgrep -x "uvicorn" > /dev/null; then
