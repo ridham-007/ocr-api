@@ -124,7 +124,7 @@ if [ -d "$CERT_DIR" ]; then
         sudo certbot renew --non-interactive --agree-tos
     fi
 else
-    echo "No certificate found. Requesting a new one..."
+    echo "No certificate found. Requesting a new one.."
     sudo certbot --nginx -d api.smartdocsai.com --non-interactive --agree-tos -m ridhamavaiya1999@gmail.com
 fi
 
