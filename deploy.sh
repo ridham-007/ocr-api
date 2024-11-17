@@ -71,7 +71,7 @@ sudo apt-get install -y certbot python3-certbot-nginx
 # Define the config file path
 CONFIG_FILE="/etc/nginx/sites-available/myapp"
 
-# Check if the configuration file
+# Check if the configuration file exists
 if [ -f "$CONFIG_FILE" ]; then
     # If the file exists, remove the existing file and the symlink
     sudo rm -f "$CONFIG_FILE"
@@ -108,7 +108,7 @@ EOF"
 sudo ln -s "$CONFIG_FILE" /etc/nginx/sites-enabled
 echo "New Nginx reverse proxy configuration created."
 
-# Restart Nginx to apply changes
+# Restart Nginx to apply changes is 
 sudo systemctl restart nginx
 
 # Check if a valid certificate already exists
@@ -124,7 +124,7 @@ if [ -d "$CERT_DIR" ]; then
         sudo certbot renew --non-interactive --agree-tos
     fi
 else
-    echo "No certificate found. Requesting a new one.."
+    echo "No certificate found. Requesting a new one..."
     sudo certbot --nginx -d api.smartdocsai.com --non-interactive --agree-tos -m ridhamavaiya1999@gmail.com
 fi
 
@@ -137,15 +137,14 @@ echo "Removing already started uvicorn"
 if pgrep -x "uvicorn" > /dev/null; then
     # Stop any existing uvicorn process
     sudo pkill uvicorn || true  # Ignore errors if no process is found
-    # sudo rm -rf myapp.sock
+    sudo rm -rf myapp.sock
     echo "Existing uvicorn process removed."
 else
     echo "No running uvicorn process found."
 fi
 
-# Start uvicorn with the Flask using the virtual environment
-echo "Starting uvicorn again"
-# sudo nohup ~/langchain-app-venv/bin/uvicorn main:app --workers 3 --uds /var/www/langchain-app/myapp.sock &
-sudo nohup ~/langchain-app-venv/bin/uvicorn main:app --workers 3 --uds /var/www/langchain-app/myapp.sock > /var/www/langchain-app/uvicorn.log 2>&1 &
+# Start uvicorn with the Flask application using the virtual environment
+echo "Starting uvicorn"
+sudo nohup ~/langchain-app-venv/bin/uvicorn main:app --workers 3 --uds /var/www/langchain-app/myapp.sock &
 
-echo "Uvicorn boom boom🚀"
+echo "Uvicorn started 🚀"
