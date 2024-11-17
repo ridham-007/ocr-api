@@ -144,7 +144,7 @@ else
 fi
 
 # Start uvicorn with the Flask using the virtual environment
-echo "Starting uvicorn"
+echo "Starting uvicorn again"
 # sudo nohup ~/langchain-app-venv/bin/uvicorn main:app --workers 3 --uds /var/www/langchain-app/myapp.sock &
 sudo nohup ~/langchain-app-venv/bin/uvicorn main:app --workers 3 --uds /var/www/langchain-app/myapp.sock > /var/www/langchain-app/uvicorn.log 2>&1 &
 
